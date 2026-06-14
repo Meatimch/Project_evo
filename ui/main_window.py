@@ -54,6 +54,7 @@ import random
 import sys
 
 from engine import Engine
+from export_logs import save_logs
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -66,7 +67,6 @@ class MainWindow(QWidget):
         self.sun_data = [] # кол-во получаемой энергии от солнца
         self.mineral_data = [] # кол-во получаемой энергии от минералов
         self.hunt_data = [] # кол-во получаемой энергии от охоты
-
         self.setup_ui()
 
         self.timer = QTimer()
@@ -96,6 +96,8 @@ class MainWindow(QWidget):
         self.mineral_income.setValue(100)
 
         self.start_button = QPushButton("Start")
+        self.stop_button = QPushButton("Stop")
+        self.continue_button = QPushButton("Continue")
 
         settings_layout.addWidget(QLabel("World size"))
         settings_layout.addWidget(self.world_size)
@@ -107,6 +109,8 @@ class MainWindow(QWidget):
         settings_layout.addWidget(self.mineral_income)
 
         settings_layout.addWidget(self.start_button)
+        settings_layout.addWidget(self.stop_button)
+        settings_layout.addWidget(self.continue_button)
 
         main_layout.addLayout(settings_layout)
 
@@ -125,9 +129,10 @@ class MainWindow(QWidget):
 
         self.energy_plot = pg.PlotWidget(title="Energy Sources")
 
-        self.sun_curve = self.energy_plot.plot(name="Sun")
-        self.mineral_curve = self.energy_plot.plot(name="Minerals")
-        self.hunt_curve = self.energy_plot.plot(name="Hunting")
+        # set plot colors: Sun=green, Minerals=blue, Hunting=red
+        self.sun_curve = self.energy_plot.plot(name="Sun", pen='g')
+        self.mineral_curve = self.energy_plot.plot(name="Minerals", pen='b')
+        self.hunt_curve = self.energy_plot.plot(name="Hunting", pen='r')
 
         main_layout.addWidget(self.energy_plot)
 
@@ -153,9 +158,34 @@ class MainWindow(QWidget):
         self.setLayout(main_layout)
 
         self.start_button.clicked.connect(self.start_simulation)
+        self.stop_button.clicked.connect(self.stop_simulation)
+        self.continue_button.clicked.connect(self.continue_simulation)
+
+        self.paused = False
+
+    def stop_simulation(self):
+        if hasattr(self, 'engine'):
+            try:
+                path = save_logs(self.engine.hist_logs.logs)
+                self.console.append(f"Logs saved to: {path}")
+            except Exception as e:
+                self.console.append(f"Failed to save logs: {e}")
+
+        # pause the timer so `step` is not called
+        if self.timer.isActive():
+            self.timer.stop()
+        self.paused = True
+
+    def continue_simulation(self):
+        # resume the timer
+        if not self.timer.isActive():
+            self.timer.start(100)
+        self.paused = False
 
     def start_simulation(self):
+
         self.engine = Engine(self.world_size.value(), self.sun_income.value(), self.mineral_income.value())
+
         self.console.append("Simulation started")
 
         self.population_data.clear()
@@ -176,9 +206,9 @@ class MainWindow(QWidget):
 
         population = stats.population_size
 
-        sun = stats.sun_energy
-        minerals = stats.mineral_energy
-        hunt = stats.hunt_energy
+        sun = stats.get_sun_energy()
+        minerals = stats.get_mineral_energy()
+        hunt = stats.get_hunt_energy()
 
         self.population_data.append(population)
 
@@ -197,10 +227,10 @@ class MainWindow(QWidget):
             f"[1, 4, 2, 8, 3, {step % 10}]"
         )
 
-        for log in stats.logs[self.last_log_index:]:
-            self.console.append(log)
+        # for log in stats.logs[self.last_log_index:]:
+        #     self.console.append(log)
 
-        if step % 50 == 0:
+        if step % 50 == 49:
             self.console.append(
                 f"Step {self.engine.tick}: population={population}"
             )

@@ -9,6 +9,7 @@ from ui.main_window import MainWindow
 
 
 def main():
+    print("starting main.py")
     app = QApplication(sys.argv)
 
     window = MainWindow()

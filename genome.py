@@ -1,11 +1,5 @@
 import random
-
-from commands import MAX_GENE_VALUE
-
-"""Genome module.
-
-Defines the `Genome` class skeleton which encapsulates genetic data for bots.
-"""
+MAX_GENE_VALUE = 12
 
 class Genome:
     genes: list[int]
@@ -15,10 +9,10 @@ class Genome:
         self.genes = genes
         self.current_index = 0
 
-    def next_gene(self) -> int:
+    def next_gene(self, shift = 1) -> int:
         """Сдвигает геном на 1"""
         gene = self.genes[self.current_index]
-        self.current_index = (self.current_index + 1) % len(self.genes) # Вместо +1 можно использовать более сложные формулы
+        self.current_index = (self.current_index + shift) % len(self.genes) # Вместо +1 можно использовать более сложные формулы
         return gene
 
     def jump(self, offset: int) -> int:
@@ -31,12 +25,12 @@ class Genome:
         """Случайно изменяет один из генов"""
         index = random.randint(0, len(self.genes) - 1)
         self.genes[index] = random.randint(0, MAX_GENE_VALUE) # MAX_GENE_VALUE - максимальное значение для гена
+        self.current_index = random.randint(0, len(self.genes) - 1)
         
     def copy(self) -> 'Genome':
         """Создает копию генома"""
-        new_genome = Genome()
-        new_genome.genes = self.genes
-        new_genome.current_index = self.current_index # или можно 0 поставить
+        new_genome = Genome(self.genes)
+        new_genome.current_index = self.current_index
         return new_genome
     
     def get_current_gene(self) -> int:
