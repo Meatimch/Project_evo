@@ -1,3 +1,8 @@
 @echo off
-REM Launch Project_evo with project's virtualenv Python
-F:\git\Project_evo\.venv\Scripts\python.exe "%~dp0main.py" %*
+
+if not exist ".venv" (
+    py -m venv .venv
+    .venv\Scripts\python.exe -m pip install -r requirements.txt
+)
+
+.venv\Scripts\python.exe main.py

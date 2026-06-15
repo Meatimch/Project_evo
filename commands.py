@@ -62,8 +62,12 @@ def photosynthesize(bot, world, stats):
     return stats
     
 def get_minerals(bot, world, stats):
-    const_minerals = world.mineral_income - bot.y * 5
-    if const_minerals > 0:
+    const_minerals = world.mineral_income - bot.y * 2
+    if const_minerals > world.mineral_income * 0.2:
+        bot.minerals += const_minerals
+        stats.set_mineral_energy(stats.get_mineral_energy() + const_minerals)
+    elif bot.y < world.size * 0.9:
+        const_minerals = world.mineral_income * 0.2
         bot.minerals += const_minerals
         stats.set_mineral_energy(stats.get_mineral_energy() + const_minerals)
     else:
@@ -109,6 +113,35 @@ def hunt(bot, world, stats):
             bot.genome.jump(bot.genome.current_index + 1)
     return stats
 
+def jump_by_minerals(bot, world, stats):
+    if bot.reg_minerals > bot.get_genome_index()**2 % world.mineral_income:
+        bot.genome.jump(bot.get_genome_index() + 1)
+    return stats
+
+def jump_by_energy(bot, world, stats):
+    if bot.reg_energy > bot.get_genome_index()**2 % world.sun_income:
+        bot.genome.jump(bot.get_genome_index() + 1)
+    return stats
+
+def jump_by_height(bot, world, stats):
+    if bot.reg_y > bot.get_genome_index()**2 % world.size:
+        bot.genome.jump(bot.get_genome_index() + 1)
+    return stats
+
+def jump_by_object(bot, world, stats):
+    if not(bot.reg_look is None):
+        bot.genome.jump(bot.get_genome_index() + 1)
+    return stats
+
+def is_it_border(bot, world, stats):
+    x, y = bot.get_look_direction()
+    if x < 0 or world.size < x or y < 0 or world.size < y:
+        bot.genome.jump(bot.get_genome_index() + 1)
+    return stats
+
+def filler(bot, world, stats):
+    return stats
+
 commands = {
     0: rotate_right,
     1: rotate_left,
@@ -118,9 +151,15 @@ commands = {
     5: minerals_to_energy,
     6: how_many_energy,
     7: my_height, # высота относительно дна
-    8: look_around, # возвращает массив из 8 чисел - что находится вокруг бота
+    8: look_around, # возвращает объект - бот / None
     9: photosynthesize,
     10: get_minerals,
     11: divide,
-    12: hunt
+    12: hunt,
+    13: jump_by_minerals,
+    14: jump_by_energy,
+    15: jump_by_height,
+    16: jump_by_object,
+    17: is_it_border,
+    18: filler
 }

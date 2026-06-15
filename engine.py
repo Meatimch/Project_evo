@@ -7,9 +7,10 @@ import random
 
 
 class Engine:
-    def __init__(self, size=100, sun_income=100, mineral_income=100):
+    def __init__(self, size=100, sun_income=100, mineral_income=100, mutation_rate=50):
         self.world = World(size=size, sun_income=sun_income, mineral_income=mineral_income)
 
+        self.mutatuon_rate = mutation_rate
         self.tick = 0
         self.statistics = Statistics()
         self.hist_logs = HistLogs(logs=[])
@@ -21,11 +22,11 @@ class Engine:
         self.tick += 1
         for bot in self.world.bots:
             stats = self.statistics
-            _ = random.randint(0, 100)
-            if _ < 15:
+            _ = random.randint(0, 10000)
+            if _ < self.mutatuon_rate:
                 bot.genome.mutate()
                 logs.append(f"Tick {self.tick}: Bot {bot.id} at ({bot.x}, {bot.y}) mutated its genome to {bot.genome.genes}.")
-            self.statistics = bot.execute_step(self.world, stats)
+            bot.execute_step(self.world, stats)
             logs.append(f"Tick {self.tick}: Bot {bot.id} at ({bot.x}, {bot.y}) executed a step {bot.genome.get_current_gene()}.")
             self.hist_logs.logs.append(logs[-1])
             pass
@@ -36,7 +37,7 @@ class Engine:
         return self.statistics
 
     def initialize_world(self):
-        genome = Genome([0, 9, 2, 9, 4, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11])
+        genome = Genome([0, 9, 2, 9, 4, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 0, 9, 2, 9, 4, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11])
         bot = Bot(genome=genome)
         bot.x = self.world.size // 2
         bot.y = self.world.size - 3
