@@ -1,5 +1,5 @@
 import random
-MAX_GENE_VALUE = 12
+MAX_GENE_VALUE = 32
 
 class Genome:
     genes: list[int]
@@ -36,4 +36,8 @@ class Genome:
     def get_current_gene(self) -> int:
         """Возвращает текущий ген без изменения индекса"""
         return self.genes[self.current_index]
+    pass
+    
+    def get_gene_shift(self, shift) -> int:
+        return self.genes[(self.current_index+shift)%MAX_GENE_VALUE]
     pass

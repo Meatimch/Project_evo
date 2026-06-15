@@ -4,11 +4,11 @@ from genome import Genome
 
 def rotate_right(bot, world, stats):
     bot.direction_index = (bot.direction_index + 1) % 8
-    return stats
+    return False
 
 def rotate_left(bot, world, stats):
     bot.direction_index = (bot.direction_index - 1) % 8
-    return stats
+    return False
 
 def move_forward(bot, world, stats):
     dx, dy = bot.DIRECTIONS[bot.direction_index]
@@ -16,7 +16,7 @@ def move_forward(bot, world, stats):
         world.move_bot(bot, bot.x + dx, bot.y + dy)
     else:
         bot.genome.next_gene()
-    return stats
+    return True
 
 def move_backward(bot, world, stats):
     dx, dy = bot.DIRECTIONS[bot.direction_index]
@@ -24,55 +24,55 @@ def move_backward(bot, world, stats):
         world.move_bot(bot, bot.x - dx, bot.y - dy)
     else:
         bot.genome.next_gene()
-    return stats
+    return True
 
 def how_many_minerals(bot, world, stats):
     bot.reg_minerals = bot.minerals
-    return stats
+    bot.genome.jump(bot.genome.get_gene_shift(1))
+    return False
 
 def minerals_to_energy(bot, world, stats):
     if bot.reg_minerals > 0:
         energy_gained = bot.minerals * 1 - 10 # Конвертация с некоторыми потерями
         bot.energy += energy_gained
-        bot.genome.jump(bot.genome.current_index + 1)
+        bot.genome.jump(bot.genome.get_gene_shift(1))
         bot.minerals = 0
     else:
         bot.genome.next_gene()
-    return stats
+    return True
 
 def how_many_energy(bot, world, stats):
     bot.reg_energy = bot.energy
-    return stats
+    bot.genome.jump(bot.genome.get_gene_shift(1))
+    return False
 
 def my_height(bot, world, stats):
     bot.reg_y = bot.y
-    return stats
+    bot.genome.jump(bot.genome.get_gene_shift(1))
+    return False
 
 def look_around(bot, world, stats):
     bot.reg_look = bot.get_look_at_cell(world)
-    return stats
+    bot.genome.jump(bot.genome.get_gene_shift(1))
+    return False
 
 def photosynthesize(bot, world, stats):
-    const_sun = world.sun_income - (world.size - bot.y) * 5
-    if const_sun > 0:
+    const_sun = world.sun_income - (world.size - bot.y)
+    if const_sun > 0 and bot.y > world.size*1//3:
         bot.energy += const_sun
         stats.set_sun_energy(stats.get_sun_energy() + const_sun)
     else:
         bot.genome.next_gene()
-    return stats
+    return True
     
 def get_minerals(bot, world, stats):
     const_minerals = world.mineral_income - bot.y * 2
-    if const_minerals > world.mineral_income * 0.2:
-        bot.minerals += const_minerals
-        stats.set_mineral_energy(stats.get_mineral_energy() + const_minerals)
-    elif bot.y < world.size * 0.9:
-        const_minerals = world.mineral_income * 0.2
+    if const_minerals > world.mineral_income // 10:
         bot.minerals += const_minerals
         stats.set_mineral_energy(stats.get_mineral_energy() + const_minerals)
     else:
-        bot.genome.jump(bot.genome.current_index + 1)
-    return stats
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+    return True
     
 def divide(bot, world, stats):
     look = bot.get_look_at_cell(world)
@@ -84,18 +84,18 @@ def divide(bot, world, stats):
                 bot.energy //= 2 # Делим энергию между родителем и потомком
                 child_genome = bot.genome.copy()
                 _ = random.randint(0, 100)
-                if _ < 5: # 5% шанс на мутацию
+                if _ < 25: # 25% шанс на мутацию
                     child_genome.mutate()
                 child_x, child_y = bot.get_look_direction()
                 world.reproduce_bot(genome=child_genome, x=child_x, y=child_y, energy=bot.energy)
                 bot.genome.next_gene()
             else:
-                bot.genome.jump(bot.genome.current_index + 1)
+                bot.genome.jump(bot.genome.get_gene_shift(1))
         else:
-            bot.genome.jump(bot.genome.current_index + 1)
+            bot.genome.jump(bot.genome.get_gene_shift(2))
     else:
-        bot.genome.jump(bot.genome.current_index + 1)
-    return stats
+        bot.genome.jump(bot.genome.get_gene_shift(3))
+    return True
 
 def hunt(bot, world, stats):
     look = bot.reg_look
@@ -110,37 +110,38 @@ def hunt(bot, world, stats):
         if bot.genome.current_index % 2 == 0:
             bot.genome.next_gene()
         else:
-            bot.genome.jump(bot.genome.current_index + 1)
-    return stats
+            bot.genome.jump(bot.genome.get_gene_shift(1))
+    return True
 
 def jump_by_minerals(bot, world, stats):
     if bot.reg_minerals > bot.get_genome_index()**2 % world.mineral_income:
-        bot.genome.jump(bot.get_genome_index() + 1)
-    return stats
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+    return False
 
 def jump_by_energy(bot, world, stats):
     if bot.reg_energy > bot.get_genome_index()**2 % world.sun_income:
-        bot.genome.jump(bot.get_genome_index() + 1)
-    return stats
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+    return False
 
 def jump_by_height(bot, world, stats):
     if bot.reg_y > bot.get_genome_index()**2 % world.size:
-        bot.genome.jump(bot.get_genome_index() + 1)
-    return stats
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+    return False
 
 def jump_by_object(bot, world, stats):
     if not(bot.reg_look is None):
-        bot.genome.jump(bot.get_genome_index() + 1)
-    return stats
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+    return False
 
 def is_it_border(bot, world, stats):
     x, y = bot.get_look_direction()
     if x < 0 or world.size < x or y < 0 or world.size < y:
-        bot.genome.jump(bot.get_genome_index() + 1)
-    return stats
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+    return False
 
 def filler(bot, world, stats):
-    return stats
+    bot.genome.jump(bot.genome.get_gene_shift(1))
+    return False
 
 commands = {
     0: rotate_right,
@@ -161,5 +162,19 @@ commands = {
     15: jump_by_height,
     16: jump_by_object,
     17: is_it_border,
-    18: filler
+    18: filler,
+    19: filler,
+    20: filler,
+    21: filler,
+    22: filler,
+    23: filler,
+    24: filler,
+    25: filler,
+    26: filler,
+    27: filler,
+    28: filler,
+    29: filler,
+    30: filler,
+    31: filler,
+    32: filler
 }

@@ -6,7 +6,7 @@ class World:
         self.sun_income = sun_income
         self.mineral_income = mineral_income
         self.grid = [
-            [None for _ in range(self.size)] 
+            [None for _ in range(150)] 
             for _ in range(self.size)
         ]
 

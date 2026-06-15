@@ -8,6 +8,7 @@ Note: no function implementations are provided — only basic structure.
 from genome import Genome
 from world import World
 from commands import *
+import random
 
 
 class Bot:
@@ -39,11 +40,20 @@ class Bot:
         self.reg_y = 0
 
     def execute_step(self, world: 'World', stats = None):
-        old_index = self.genome.current_index
         self.stats = stats
-        commands[self.genome.get_current_gene()](bot=self, world=world, stats = stats)
+        is_it_action = False
+        counter = 0
+        while not(is_it_action) and counter < 10:
+            old_index = self.genome.current_index
+            is_it_action = commands[self.genome.get_current_gene()](bot=self, world=world, stats = stats)
+            if self.genome.current_index == old_index:
+                self.genome.next_gene()
+            counter+=1
         self.age += 1
         self.energy -= 5  # Базовая стоимость жизни
+        # if self.age > 400:
+        #     if random.randint(0, 1000) < 4:
+        #         self.energy = -999
         if self.energy > 800:
             self.energy = 800
         if self.genome.current_index == old_index:
