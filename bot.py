@@ -23,7 +23,7 @@ class Bot:
     DIRECTIONS = ((0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1))
     _next_id = 1
 
-    def __init__(self, genome: 'Genome', x=0, y=0, energy=100):
+    def __init__(self, genome: 'Genome', x=0, y=0, energy=100, is_multicell = False):
         self.genome = genome
         self.id = Bot._next_id
         Bot._next_id += 1
@@ -33,6 +33,8 @@ class Bot:
         self.direction_index = 0
         self.x = x
         self.y = y
+        self.is_multicell = is_multicell
+        self.multicell_neighbors = set()
         # Сенсоры
         self.reg_energy = 0
         self.reg_minerals = 0
@@ -50,10 +52,7 @@ class Bot:
                 self.genome.next_gene()
             counter+=1
         self.age += 1
-        self.energy -= 5  # Базовая стоимость жизни
-        # if self.age > 400:
-        #     if random.randint(0, 1000) < 4:
-        #         self.energy = -999
+        self.energy -= 1  # Базовая стоимость жизни
         if self.energy > 800:
             self.energy = 800
         if self.genome.current_index == old_index:
@@ -83,13 +82,12 @@ class Bot:
     def get_look_at_cell(self, world: 'World'):
         """Returns the contents of the cell in front of the bot based on its current direction."""
         dx, dy = self.get_dx_dy()
-        look_x = self.x + dx
+        look_x = (self.x + dx) % world.size_x
         look_y = self.y + dy
         return world.get_cell(look_x, look_y)
     
-    def get_look_direction(self) -> list: # лучше изменить на get_look_coordinates()
+    def get_look_direction(self, world: 'World') -> list: # лучше изменить на get_look_coordinates()
         dx, dy = self.get_dx_dy()
-        look_x = self.x + dx
+        look_x = (self.x + dx) % world.size_x
         look_y = self.y + dy
         return look_x, look_y
-    pass

@@ -251,6 +251,23 @@ class MainWindow(QWidget):
         self.stop_button.clicked.connect(self.stop_simulation)
         self.continue_button.clicked.connect(self.continue_simulation)
 
+        # Добавляем виджет для поля
+        self.world_plot = pg.PlotWidget(title="World Map")
+        self.world_plot.setAspectLocked(True)  # квадратные клетки
+        self.world_plot.hideAxis('bottom')
+        self.world_plot.hideAxis('left')
+        
+        self.world_image = pg.ImageItem()
+        self.world_plot.addItem(self.world_image)
+        
+        # Добавляем сетку (опционально, но чуть медленнее)
+        # Можно просто нарисовать линии через QPen, но они будут перерисовываться при каждом зумме.
+        # Лучше без сетки, а клетки пусть сливаются.
+        
+        # Добавляем в layout, например, в правую колонку или новую вкладку
+        self.world_plot.setFixedSize(400, 400)
+        right_layout.addWidget(self.world_plot)  # или в левый layout
+
         self.paused = False
 
     def stop_simulation(self):
@@ -311,6 +328,9 @@ class MainWindow(QWidget):
         # for log in stats.logs[self.last_log_index:]:
         #     self.console.append(log)
 
+        if step % 3 == 0:
+            self.update_world_view()
+
         if step % 50 == 49:
             stats.collect_rare(self.engine.world)
             self.update_height_distribution(
@@ -328,6 +348,25 @@ class MainWindow(QWidget):
                 f"Youngest genome:\n"
                 f"{stats.youngest_genome}"
             )
+
+    def update_world_view(self):
+        world = self.engine.world
+        size_x = world.size_x
+        size_y = world.size
+        img = np.zeros((size_x, size_y, 3), dtype=np.uint8)
+        count = 0
+        for bot in world.bots:
+            x, y, = bot.x, bot.y
+            if 0 <= x < size_x and 0 <= y < size_y:
+            # Оттенок от красного (энергия 0) до зелёного (энергия 800)
+                energy_norm = min(1.0, bot.energy / 800.0)
+                r = int(255 * (1 - energy_norm))
+                g = int(255 * energy_norm)
+                b = 0
+                img[x, y] = [r, g, b]
+                count += 1
+        #print(count)
+        self.world_image.setImage(img, autoLevels=False)
 
     def update_height_distribution(
         self,

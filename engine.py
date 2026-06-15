@@ -28,7 +28,7 @@ class Engine:
             bot.execute_step(self.world, self.statistics)
             logs.append(f"Tick {self.tick}: Bot {bot.id} at ({bot.x}, {bot.y}) executed a step {bot.genome.get_current_gene()}.")
             self.hist_logs.logs.append(logs[-1])
-            pass
+        self.world.multicell_energy_flow()
         self.world.remove_dead()                      # Удаляем тех у кого энергия < 0
         self.world.bots.extend(self.world.new_bots)   # Добавляем в список ботов новорождённых
         self.world.new_bots.clear()                   # Удаляем список новорождённых
@@ -38,10 +38,14 @@ class Engine:
     def initialize_world(self):
         #genome = Genome([0, 9, 2, 9, 4, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 0, 9, 2, 9, 4, 6, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11])
         genome = Genome([9]*64)
-        for i in range(1, 31):
+        genome.genes[10] = 0
+        genome.genes[11] = 11
+        for i in range(0, self.world.size_x//2):
             bot = Bot(genome=genome)
             bot.x = i * 2
             bot.y = self.world.size - 3
+            if bot.y >= self.world.size:
+                bot.y = self.world.size - 1
             self.world.bots.append(bot)
             self.world.set_cell(bot.x, bot.y, bot)
         print('world.bots len:', len(self.world.bots))

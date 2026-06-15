@@ -25,7 +25,7 @@ class Statistics:
     def collect_rare(self, world):
         self.height_distribution = [0] * world.size
         self.age_distribution = {}
-        if len(world.bots) > 0:
+        if world.get_population() > 0:
             start_age = world.bots[0].age
             self.youngest_genome = world.bots[0].genome.genes
         for bot in world.bots:
