@@ -53,8 +53,8 @@ class Bot:
             counter+=1
         self.age += 1
         self.energy -= 1  # Базовая стоимость жизни
-        if self.energy > 800:
-            self.energy = 800
+        if self.energy > 1000:
+            self.energy = 1000
         if self.genome.current_index == old_index:
             self.genome.next_gene()
         return stats

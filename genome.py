@@ -1,6 +1,6 @@
 import random
 import os
-MAX_GENE_VALUE = 32
+MAX_GENE_VALUE = 63
 
 class Genome:
     genes: list[int]
@@ -24,14 +24,14 @@ class Genome:
     
     def mutate(self):
         """Случайно изменяет один из генов"""
-        random.seed(int.from_bytes(os.urandom(4), 'big'))
+        #random.seed(int.from_bytes(os.urandom(4), 'big'))
         index = random.randint(0, len(self.genes) - 1)
         self.genes[index] = random.randint(0, MAX_GENE_VALUE) # MAX_GENE_VALUE - максимальное значение для гена
-        self.current_index = random.randint(0, len(self.genes) - 1)
+        #self.current_index = random.randint(0, len(self.genes) - 1)
         
     def copy(self) -> 'Genome':
         """Создает копию генома"""
-        new_genome = Genome(self.genes)
+        new_genome = Genome(self.genes.copy())
         new_genome.current_index = self.current_index
         return new_genome
     

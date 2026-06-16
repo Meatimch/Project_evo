@@ -112,7 +112,7 @@ class MainWindow(QWidget):
         settings_layout.addWidget(QLabel("Minerals"))
         settings_layout.addWidget(self.mineral_income)
 
-        settings_layout.addWidget(QLabel("Mutation 0.%"))
+        settings_layout.addWidget(QLabel("Mutation 0.1%"))
         settings_layout.addWidget(self.mutation_rate)
 
         settings_layout.addWidget(self.start_button)
@@ -329,7 +329,8 @@ class MainWindow(QWidget):
         #     self.console.append(log)
 
         if step % 3 == 0:
-            self.update_world_view()
+            pass
+        self.update_world_view()
 
         if step % 50 == 49:
             stats.collect_rare(self.engine.world)
@@ -359,54 +360,39 @@ class MainWindow(QWidget):
             x, y, = bot.x, bot.y
             if 0 <= x < size_x and 0 <= y < size_y:
             # Оттенок от красного (энергия 0) до зелёного (энергия 800)
-                energy_norm = min(1.0, bot.energy / 800.0)
+                energy_norm = min(1.0, bot.energy / 1000.0)
                 r = int(255 * (1 - energy_norm))
                 g = int(255 * energy_norm)
                 b = 0
+                r = max(0, min(r, 255))
+                g = max(0, min(g, 255))
+                b = max(0, min(b, 255))
                 img[x, y] = [r, g, b]
                 count += 1
         #print(count)
         self.world_image.setImage(img, autoLevels=False)
 
-    def update_height_distribution(
-        self,
-        height_distribution
-    ):
+    def update_height_distribution(self, height_distribution):
         world_size = len(height_distribution)
-
-        max_population = max(
-            max(height_distribution),
-            1
-        )
-
-        img = np.zeros(
-            (1, world_size),
-            dtype=float
-        )
-
-        for y, count in enumerate(
-            height_distribution
-        ):
+        max_population = max(max(height_distribution), 1)
+        img = np.zeros((1, world_size), dtype=float)
+        for y, count in enumerate(height_distribution):
             img[0, y] = count / max_population
-
         self.height_image.setImage(
             img,
             autoLevels=False,
             levels=(0, 1)
         )
-
         self.height_image.setRect(
             0,
             0,
             1,
             world_size
         )
-
         self.height_plot.setYRange(
             0,
             world_size
         )
-
         self.height_plot.setXRange(
             0,
             1
