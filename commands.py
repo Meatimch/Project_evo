@@ -38,11 +38,14 @@ def move_backward(bot, world, stats):
 
 def how_many_minerals(bot, world, stats):
     bot.reg_minerals = bot.minerals
-    bot.genome.jump(bot.genome.get_gene_shift(1))
+    if bot.minerals > 0:
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+    else:
+        bot.genome.jump(bot.genome.get_gene_shift(2))
     return False
 
 def minerals_to_energy(bot, world, stats):
-    if bot.reg_minerals > 0:
+    if bot.minerals > 0:
         energy_gained = bot.minerals * 1 - 10 # Конвертация с некоторыми потерями
         bot.energy += energy_gained
         bot.genome.jump(bot.genome.get_gene_shift(1))
@@ -53,17 +56,26 @@ def minerals_to_energy(bot, world, stats):
 
 def how_many_energy(bot, world, stats):
     bot.reg_energy = bot.energy
-    bot.genome.jump(bot.genome.get_gene_shift(1))
+    if bot.energy > 150:
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+    else:
+        bot.genome.jump(bot.genome.get_gene_shift(2))
     return False
 
 def my_height(bot, world, stats):
     bot.reg_y = bot.y
-    bot.genome.jump(bot.genome.get_gene_shift(1))
+    if bot.y > world.size // 2:
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+    else:
+        bot.genome.jump(bot.genome.get_gene_shift(2))
     return False
 
 def look_around(bot, world, stats):
     bot.reg_look = bot.get_look_at_cell(world)
-    bot.genome.jump(bot.genome.get_gene_shift(1))
+    if not(bot.reg_look is None):
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+    else:
+        bot.genome.jump(bot.genome.get_gene_shift(2))
     return False
 
 def photosynthesize(bot, world, stats):
@@ -88,48 +100,42 @@ def divide(bot, world, stats):
     look = bot.get_look_at_cell(world)
     x, y = bot.get_look_direction(world)
     if look is None and 0 <= y < world.size: # Если перед ботом пусто, то можно делиться
-        if bot.reg_energy > 150: #знает ли бот, что у него достаточно энергии для деления
-            if bot.energy > 150: # Условие для деления
-                from bot import Bot
-                bot.energy //= 2 # Делим энергию между родителем и потомком
-                child_genome = bot.genome.copy()
-                if random.randint(0, 100) < 25: # 25% шанс на мутацию
-                    child_genome.mutate()
-                world.reproduce_bot(genome=child_genome, x=x, y=y, energy=bot.energy)
-                bot.genome.next_gene()
-            else:
-                bot.genome.jump(bot.genome.get_gene_shift(1))
+        if bot.energy > 150: # Условие для деления
+            from bot import Bot
+            bot.energy //= 2 # Делим энергию между родителем и потомком
+            child_genome = bot.genome.copy()
+            if random.randint(0, 100) < 25: # 25% шанс на мутацию
+                child_genome.mutate()
+            world.reproduce_bot(genome=child_genome, x=x, y=y, energy=bot.energy)
+            bot.genome.next_gene()
         else:
-            bot.genome.jump(bot.genome.get_gene_shift(2))
+            bot.genome.jump(bot.genome.get_gene_shift(1))
     else:
-        bot.genome.jump(bot.genome.get_gene_shift(3))
+        bot.genome.jump(bot.genome.get_gene_shift(2))
     return True
 
 def multicell_divide(bot, world, stats):
     look = bot.get_look_at_cell(world)
     x, y = bot.get_look_direction(world)
     if look is None and 0 <= y < world.size:
-        if bot.reg_energy > 150: #знает ли бот, что у него достаточно энергии для деления
-            if bot.energy > 150: # Условие для деления
-                from bot import Bot
-                bot.energy //= 2 # Делим энергию между родителем и потомком
-                child_genome = bot.genome.copy()
-                if random.randint(0, 100) < 25: # 25% шанс на мутацию
-                    child_genome.mutate()
-                world.reproduce_bot(genome=child_genome, x=x, y=y, energy=bot.energy, is_multicell=True, obj=bot)
-                bot.genome.next_gene()
-            else:
-                bot.genome.jump(bot.genome.get_gene_shift(1))
+        if bot.energy > 150: # Условие для деления
+            from bot import Bot
+            bot.energy //= 2 # Делим энергию между родителем и потомком
+            child_genome = bot.genome.copy()
+            if random.randint(0, 100) < 25: # 25% шанс на мутацию
+                child_genome.mutate()
+            world.reproduce_bot(genome=child_genome, x=x, y=y, energy=bot.energy, is_multicell=True, obj=bot)
+            bot.genome.next_gene()
         else:
-            bot.genome.jump(bot.genome.get_gene_shift(2))
+            bot.genome.jump(bot.genome.get_gene_shift(1))
     else:
-        bot.genome.jump(bot.genome.get_gene_shift(3))
+        bot.genome.jump(bot.genome.get_gene_shift(2))
 
 
 def hunt(bot, world, stats):
-    look = bot.reg_look
+    look = bot.get_look_at_cell(world)
     from bot import Bot
-    if isinstance(look, Bot) and look.energy < bot.energy: # Если перед ботом другой бот с меньшей энергией, то можно охотиться
+    if isinstance(look, Bot) and look.energy//4 < bot.energy: # Если перед ботом другой бот с меньшей энергией, то можно охотиться
         bot.energy += look.energy // 2 # Получаем половину энергии жертвы
         look.energy = -999 # Жертва умирает
         bot.genome.next_gene()
@@ -145,31 +151,41 @@ def hunt(bot, world, stats):
 def jump_by_minerals(bot, world, stats):
     if bot.reg_minerals > bot.get_genome_index()**2 % world.mineral_income:
         bot.genome.jump(bot.genome.get_gene_shift(1))
+    else:
+        bot.genome.jump(bot.genome.get_gene_shift(2))
     return False
 
 def jump_by_energy(bot, world, stats):
     if bot.reg_energy > bot.get_genome_index()**2 % world.sun_income:
         bot.genome.jump(bot.genome.get_gene_shift(1))
+    else:
+        bot.genome.jump(bot.genome.get_gene_shift(2))
     return False
 
 def jump_by_height(bot, world, stats):
     if bot.reg_y > bot.get_genome_index()**2 % world.size:
         bot.genome.jump(bot.genome.get_gene_shift(1))
+    else:
+        bot.genome.jump(bot.genome.get_gene_shift(2))
     return False
 
 def jump_by_object(bot, world, stats):
     if not(bot.reg_look is None):
         bot.genome.jump(bot.genome.get_gene_shift(1))
+    else:
+        bot.genome.jump(bot.genome.get_gene_shift(2))
     return False
 
 def is_it_border(bot, world, stats):
     x, y = bot.get_look_direction(world)
     if y < 0 or world.size < y:
         bot.genome.jump(bot.genome.get_gene_shift(1))
+    else:
+        bot.genome.jump(bot.genome.get_gene_shift(2))
     return False
 
 def filler(bot, world, stats):
-    bot.genome.jump(bot.genome.get_gene_shift(1))
+    bot.genome.jump(bot.genome.get_gene_shift(0))
     return False
 
 def is_i_look_at_sibling(bot, world, stats):

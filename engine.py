@@ -40,10 +40,9 @@ class Engine:
         # genome.genes[10] = 0
         # genome.genes[11] = 11
         for i in range(0, self.world.size_x//2):
-            for j in range(0, self.world.size // 3):
                 bot = Bot(genome=genome.copy())
                 bot.x = i * 2
-                bot.y = self.world.size - 3 - j*2
+                bot.y = self.world.size - 3
                 if bot.y >= self.world.size:
                     bot.y = self.world.size - 1
                 self.world.bots.append(bot)
