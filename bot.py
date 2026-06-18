@@ -45,6 +45,12 @@ class Bot:
         self.stats = stats
         is_it_action = False
         counter = 0
+        MINERAL_ZONE_LIMIT = 50
+        gradient = 1.0 - (self.y / (MINERAL_ZONE_LIMIT + 1))
+        if self.y <= MINERAL_ZONE_LIMIT:
+            self.minerals += int(world.mineral_income * gradient)
+            if self.minerals > 50:
+                self.minerals = 50
         while not(is_it_action) and counter < 10:
             old_index = self.genome.current_index
             is_it_action = commands[self.genome.get_current_gene()](bot=self, world=world, stats = stats)

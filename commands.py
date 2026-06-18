@@ -46,10 +46,11 @@ def how_many_minerals(bot, world, stats):
 
 def minerals_to_energy(bot, world, stats):
     if bot.minerals > 0:
-        energy_gained = bot.minerals * 1 - 10 # Конвертация с некоторыми потерями
+        energy_gained = bot.minerals * 3
         bot.energy += energy_gained
         bot.genome.jump(bot.genome.get_gene_shift(1))
         bot.minerals = 0
+        stats.set_mineral_energy(stats.get_mineral_energy() + energy_gained)
     else:
         bot.genome.next_gene()
     return True
@@ -81,17 +82,20 @@ def look_around(bot, world, stats):
 def photosynthesize(bot, world, stats):
     const_sun = world.sun_income - (world.size - bot.y)
     if const_sun > 0 and bot.y > world.size*1//3:
-        bot.energy += const_sun
-        stats.set_sun_energy(stats.get_sun_energy() + const_sun)
+        mineral_bonus = bot.minerals // 5 
+        total_income = const_sun + mineral_bonus
+        bot.energy += total_income
+        stats.set_sun_energy(stats.get_sun_energy() + total_income)
     else:
         bot.genome.next_gene()
     return True
     
 def get_minerals(bot, world, stats):
+    pass
     const_minerals = world.mineral_income - bot.y * 2
     if const_minerals > world.mineral_income // 10:
         bot.minerals += const_minerals
-        stats.set_mineral_energy(stats.get_mineral_energy() + const_minerals)
+        #stats.set_mineral_energy(stats.get_mineral_energy() + const_minerals)
     else:
         bot.genome.jump(bot.genome.get_gene_shift(1))
     return True
@@ -135,17 +139,28 @@ def multicell_divide(bot, world, stats):
 def hunt(bot, world, stats):
     look = bot.get_look_at_cell(world)
     from bot import Bot
-    if isinstance(look, Bot) and look.energy//4 < bot.energy: # Если перед ботом другой бот с меньшей энергией, то можно охотиться
-        bot.energy += look.energy // 2 # Получаем половину энергии жертвы
-        look.energy = -999 # Жертва умирает
-        bot.genome.next_gene()
-        if stats.get_hunt_energy() + bot.energy > 0:
-            stats.set_hunt_energy(stats.get_hunt_energy() + bot.energy)
+    if isinstance(look, Bot):
+        if look.minerals == 0:
+            can_hunt = True
+        else:
+            DEFENSE_MULTIPLIER = 5 # 1 минерал = 5 дополнительной энергии при защите
+            effective_defense = look.energy + (look.minerals * DEFENSE_MULTIPLIER)
+            can_hunt = bot.energy >= effective_defense
+        if can_hunt:
+            gained_energy = look.energy // 2
+            bot.energy += gained_energy
+            bot.minerals += look.minerals // 2
+            look.energy = -999
+            bot.genome.next_gene()
+            if gained_energy > 0:
+                stats.set_hunt_energy(stats.get_hunt_energy() + gained_energy)
+        else:
+            bot.genome.jump(bot.genome.get_gene_shift(1))
     else:
         if bot.genome.current_index % 2 == 0:
             bot.genome.next_gene()
         else:
-            bot.genome.jump(bot.genome.get_gene_shift(1))
+            bot.genome.jump(bot.genome.get_gene_shift(2))
     return True
 
 def jump_by_minerals(bot, world, stats):
@@ -185,7 +200,8 @@ def is_it_border(bot, world, stats):
     return False
 
 def filler(bot, world, stats):
-    bot.genome.jump(bot.genome.get_gene_shift(0))
+    bot.genome.next_gene()
+    #bot.genome.jump(bot.genome.get_gene_shift(0))
     return False
 
 def is_i_look_at_sibling(bot, world, stats):
@@ -227,7 +243,7 @@ commands = {
     7: my_height, # высота относительно дна
     8: look_around, # возвращает объект - бот / None
     9: photosynthesize,
-    10: get_minerals,
+    10: filler,           #tut bil get_minerals
     11: divide,
     12: hunt,
     13: jump_by_minerals,
