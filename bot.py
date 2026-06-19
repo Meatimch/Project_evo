@@ -58,9 +58,14 @@ class Bot:
                 self.genome.next_gene()
             counter+=1
         self.age += 1
+        if self.age > 10000 and random.randint(0, 1000) < 2:
+            self.energy = -999
         self.energy -= 1  # Базовая стоимость жизни
         if self.energy > 1000:
             self.energy = 1000
+            temporary_index = self.genome.current_index
+            commands[20](bot=self, world=world, stats = stats)
+            self.genome.current_index = temporary_index
         if self.genome.current_index == old_index:
             self.genome.next_gene()
         return stats
