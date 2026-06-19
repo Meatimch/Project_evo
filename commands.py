@@ -80,10 +80,13 @@ def look_around(bot, world, stats):
     return False
 
 def photosynthesize(bot, world, stats):
-    const_sun = world.sun_income - (world.size - bot.y)
-    if const_sun > 0 and bot.y > world.size*1//3:
-        mineral_bonus = bot.minerals // 5 
-        total_income = const_sun + mineral_bonus
+    sun_boundary = world.get_sun_boundary()
+    if bot.y > sun_boundary:
+        zone_height = world.size - sun_boundary
+        bot_height_in_zone = bot.y - sun_boundary
+        const_sun = int(world.sun_income * (bot_height_in_zone / zone_height))
+        mineral_bonus = bot.minerals // 100
+        total_income = const_sun * (1 + mineral_bonus)
         bot.energy += total_income
         stats.set_sun_energy(stats.get_sun_energy() + total_income)
     else:

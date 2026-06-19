@@ -1,3 +1,5 @@
+import math
+
 class World:
     def __init__(self, size=100, sun_income=100, mineral_income=100):
         self.bots = []
@@ -6,6 +8,7 @@ class World:
         self.sun_income = sun_income
         self.mineral_income = mineral_income
         self.size_x = 150
+        self.step = 0
         self.grid = [
             [None for _ in range(self.size_x)] 
             for _ in range(self.size)
@@ -104,3 +107,16 @@ class World:
                     transfer = abs(transfer)
                     neighbor.energy -= transfer
                     bot.energy += transfer
+    
+    def get_sun_boundary(self):
+        YEAR_LENGTH = 10000             #Длина года в тиках
+        
+        summer_boundary = self.size // 3
+        winter_boundary = self.size // 2
+        
+        time_fraction = (self.step % YEAR_LENGTH) / YEAR_LENGTH
+        phase = (math.cos(time_fraction * 2 * math.pi) * -1 + 1) / 2
+        
+        current_boundary = summer_boundary + (winter_boundary - summer_boundary) * phase
+        
+        return int(current_boundary)

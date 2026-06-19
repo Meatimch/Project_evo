@@ -20,6 +20,7 @@ class Engine:
         self.statistics.nullify()
         logs = []
         self.tick += 1
+        self.world.step += 1
         for bot in self.world.bots:
             # if random.randint(0, 1000) < self.mutatuon_rate:
             #     bot.genome.mutate()
@@ -51,5 +52,3 @@ class Engine:
                 self.world.set_cell(bot.x, bot.y, bot)
         print('world.bots len:', len(self.world.bots))
         #print('grid[...]:', self.world.get_cell(bot.x, bot.y))
-    pass
-
