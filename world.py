@@ -1,9 +1,11 @@
 import math
+from organic import Organic
 
 class World:
     def __init__(self, size=100, sun_income=100, mineral_income=100):
         self.bots = []
         self.new_bots = []
+        self.organics = {}
         self.size = size
         self.sun_income = sun_income
         self.mineral_income = mineral_income
@@ -29,9 +31,12 @@ class World:
         if 0 <= x < self.size_x and 0 <= y < self.size:
             self.grid[y][x] = object
 
-    def is_cell_empty(self, x: int, y: int) -> bool:
-        """Checks if the cell at (x, y) is empty."""
-        return self.get_cell(x, y) is None
+    def is_cell_empty(self, x, y):
+        if not (0 <= x < self.size_x and 0 <= y < self.size):
+            return False
+        if self.grid[y][x] is not None:
+            return False
+        return (x, y) not in self.organics
     
     def move_bot(self, bot, new_x: int, new_y: int):
         """Moves a bot to a new position if the cell is empty."""
@@ -48,7 +53,7 @@ class World:
             bot2.is_multicell = True
 
     def remove_dead(self):
-        """Removes bots that have died (energy <= 0) from the world."""
+        new_bots = []
         for bot in self.bots:
             if bot.energy < 0:
                 self.set_cell(bot.x, bot.y, None)
@@ -57,11 +62,12 @@ class World:
                     if len(neighbor.multicell_neighbors) == 0:
                         neighbor.is_multicell = False
                 bot.multicell_neighbors.clear()
-        new_bots = []
-        for bot in self.bots:
-            if bot.energy > 0:
+                if bot.convert_to_organic == True and bot.hunted == False:
+                    N = 100 + (bot.minerals * 2)
+                    self.organics[(bot.x, bot.y)] = Organic(bot.x, bot.y, N)
+            elif bot.energy >= 0:
                 new_bots.append(bot)
-        self.bots = new_bots
+        self.bots = new_bots.copy()
 
     def reproduce_bot(self, genome, x, y, energy, is_multicell=False, chain = [], obj=None):
         new_x, new_y, new_energy = x, y, energy
@@ -107,6 +113,10 @@ class World:
                     transfer = abs(transfer)
                     neighbor.energy -= transfer
                     bot.energy += transfer
+
+    def remove_organic(self, x, y):
+        if (x, y) in self.organics:
+            del self.organics[(x, y)]
     
     def get_sun_boundary(self):
         YEAR_LENGTH = 10000             #Длина года в тиках
@@ -120,3 +130,20 @@ class World:
         current_boundary = summer_boundary + (winter_boundary - summer_boundary) * phase
         
         return int(current_boundary)
+
+    def is_surrounded(self, x, y):
+        """
+        Проверяет, окружена ли клетка (x, y) со всех 8 сторон.
+        Возвращает True, если свободных клеток нет.
+        """
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue
+                nx = (x + dx) % self.size_x
+                ny = y + dy
+                if ny < 0 or ny >= self.size:
+                    continue
+                if self.is_cell_empty(nx, ny):
+                    return False
+        return True

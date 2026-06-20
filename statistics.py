@@ -1,9 +1,3 @@
-"""Statistic module.
-
-Collects and exposes statistics about the simulation and populations.
-"""
-
-
 from dataclasses import dataclass
 
 

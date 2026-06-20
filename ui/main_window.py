@@ -357,7 +357,7 @@ class MainWindow(QWidget):
         img = np.zeros((size_x, size_y, 3), dtype=np.uint8)
         count = 0
         for bot in world.bots:
-            x, y, = bot.x, bot.y
+            x, y = bot.x, bot.y
             if 0 <= x < size_x and 0 <= y < size_y:
             # Оттенок от красного (энергия 0) до зелёного (энергия 800)
                 energy_norm = min(1.0, bot.energy / 1000.0)
@@ -369,7 +369,11 @@ class MainWindow(QWidget):
                 b = max(0, min(b, 255))
                 img[x, y] = [r, g, b]
                 count += 1
-        #print(count)
+        organics_items = world.organics.values()
+        for org in organics_items:
+            x, y = org.x, org.y
+            if 0 <= x < size_x and 0 <= y < size_y:
+                img[x, y] = org.color
         self.world_image.setImage(img, autoLevels=False)
 
     def update_height_distribution(self, height_distribution):

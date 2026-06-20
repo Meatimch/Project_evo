@@ -1,10 +1,3 @@
-"""Bot module.
-
-Contains the `Bot` class skeleton used by the simulation.
-
-Note: no function implementations are provided — only basic structure.
-"""
-
 from genome import Genome
 from world import World
 from commands import *
@@ -40,6 +33,8 @@ class Bot:
         self.reg_minerals = 0
         self.reg_look = None
         self.reg_y = 0
+        self.convert_to_organic = False
+        self.hunted = False
 
     def execute_step(self, world: 'World', stats = None):
         self.stats = stats
@@ -58,14 +53,30 @@ class Bot:
                 self.genome.next_gene()
             counter+=1
         self.age += 1
-        if self.age > 10000 and random.randint(0, 1000) < 2:
-            self.energy = -999
+        # if self.age > 10000 and random.randint(0, 1000) < 2:
+        #     self.energy = -999
         self.energy -= 1  # Базовая стоимость жизни
+
         if self.energy > 1000:
-            self.energy = 1000
-            temporary_index = self.genome.current_index
-            commands[20](bot=self, world=world, stats = stats)
-            self.genome.current_index = temporary_index
+            if world.is_surrounded(self.x, self.y):
+                self.energy = -999
+                self.convert_to_organic = True
+            else:
+                self.energy = 1000
+                temporary_index = self.genome.current_index
+                for dx in [-1, 0, 1]:
+                    for dy in [-1, 0, 1]:
+                        if dx == 0 and dy == 0:
+                            continue
+                        nx = (self.x + dx) % world.size_x
+                        ny = self.y + dy
+                        if world.is_cell_empty(nx, ny):
+                            self.direction_index = self.DIRECTIONS.index((dx, dy))
+                            commands[20](bot=self, world=world, stats = stats)
+                self.genome.current_index = temporary_index
+        if self.energy <= 0:
+            self.convert_to_organic = True
+
         if self.genome.current_index == old_index:
             self.genome.next_gene()
         return stats

@@ -143,18 +143,17 @@ def hunt(bot, world, stats):
     look = bot.get_look_at_cell(world)
     from bot import Bot
     if isinstance(look, Bot):
-        if look.minerals == 0:
-            can_hunt = True
-        else:
-            DEFENSE_MULTIPLIER = 5 # 1 минерал = 5 дополнительной энергии при защите
-            effective_defense = look.energy + (look.minerals * DEFENSE_MULTIPLIER)
-            can_hunt = bot.energy >= effective_defense
+        can_hunt = True
+        DEFENSE_MULTIPLIER = 5 # 1 минерал = 5 дополнительной энергии при защите
+        effective_defense = look.energy + (look.minerals * DEFENSE_MULTIPLIER)
+        can_hunt = bot.energy >= effective_defense
         if can_hunt:
             gained_energy = look.energy // 2
             bot.energy += gained_energy
             bot.minerals += look.minerals // 2
             look.energy = -999
             bot.genome.next_gene()
+            look.hunted = True
             if gained_energy > 0:
                 stats.set_hunt_energy(stats.get_hunt_energy() + gained_energy)
         else:
@@ -235,6 +234,17 @@ def share_energy(bot, world, stats):
         bot.genome.jump(bot.genome.get_gene_shift(2))
     return True
 
+def eat_organic(bot, world, stats):
+    x, y = bot.get_look_direction(world)
+    if (x, y) in world.organics:
+        target_organic = world.organics[(x, y)]
+        bot.energy += target_organic.energy
+        world.remove_organic(x, y)
+        bot.genome.jump(1)
+    else:
+        bot.genome.jump(bot.genome.get_gene_shift(1))
+        
+
 commands = {
     0: rotate_right,
     1: rotate_left,
@@ -246,7 +256,7 @@ commands = {
     7: my_height, # высота относительно дна
     8: look_around, # возвращает объект - бот / None
     9: photosynthesize,
-    10: filler,           #tut bil get_minerals
+    10: eat_organic,
     11: divide,
     12: hunt,
     13: jump_by_minerals,
