@@ -1,7 +1,7 @@
 # Project_evo
 Симуляция эволюции ботов на двумерной сетке. Боты живут, двигаются, собирают ресурсы, охотятся, размножаются и мутируют. Поведение каждого бота задаётся геномом — списком команд.
 
-<img width="1915" height="1028" alt="image" src="https://github.com/user-attachments/assets/509ab801-af4c-4f86-9cbd-658effbcb61a" />
+<img width="1917" height="1032" alt="image" src="https://github.com/user-attachments/assets/e32a1214-1dfd-48e4-ac5c-1285a35d889b" />
 
 ## Возможности
 генетические алгоритмы (наследование, мутации);
